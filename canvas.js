@@ -6,33 +6,130 @@ canvas.height = window.innerHeight;
 
 var ctx = canvas.getContext('2d');
 
-// Fill background
-ctx.fillStyle = "#40104a";
-ctx.fillRect(0,0,canvas.width, canvas.height);
-
-// Create background stars
-ctx.strokeStyle = '#a3a2a3';
-ctx.fillStyle = '#a3a2a3';
-for (let i = 0; i < 100; i++) {
-    var x = Math.random() * canvas.width;
-    var y = Math.random() * canvas.height;
-
-    ctx.beginPath();
-    ctx.arc(x, y, 1, 0, Math.PI * 2, false);
-    ctx.fill();
-    ctx.stroke();
+// Class for background
+class Background {
+    draw() {
+        ctx.fillStyle = "#40104a";
+        ctx.fillRect(0,0,canvas.width, canvas.height);
+    }
+    update() {
+        this.draw();
+    }
 }
+
+// Class for background star
+class BackgroundStar {
+    constructor(x, y, radius) {
+        this.x = x;
+        this.y = y;
+        this.radius = radius;
+    }
+    draw() {
+        ctx.strokeStyle = '#a3a2a3';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+        ctx.fill();
+        ctx.stroke();
+    }
+    update() {
+        this.draw();
+    }
+}
+
+
+
+// Class for foreground star
+class ForegroundStar {
+    /*
+    This constructor takes the x y for the foreground star,
+    along with the radius for the star. The selected state
+    enables or disables the selected swelling animation, and
+    the swell ratio tells how much to swell by
+    */
+    constructor(x, y, radius, selected, swell_ratio) {
+        this.x = x;
+        this.y = y;
+        this.default_radius = radius;
+        this.radius = radius;
+        this.selected = selected;
+        this.max_swell = this.radius * swell_ratio;
+        this.dswell = 0.05;
+    }
+
+    /*
+    Draws the circle based on the current values
+    */
+    draw() {
+        ctx.strokeStyle = 'white';
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+        ctx.fill();
+        ctx.stroke();
+    }
+
+    /*
+    Call with animation loop, updates the swell amount if it is selected
+    else set the swell to 0
+    */
+    update() {
+        if (this.selected) {
+            this.radius += this.dswell;
+
+            if (this.radius > this.default_radius + this.max_swell) {
+                this.dswell = -0.05;
+            }
+            
+            if (this.radius < this.default_radius - this.max_swell) {
+                this.dswell = 0.05;
+            }
+        } else {
+            this.radius = this.default_radius;
+        }
+        this.draw();
+    }
+}
+
+// Create background
+sky_background = new Background()
+
+let background_star_list = []
+// Create background stars
+for (let i = 0; i < 100; i++) {
+    let x = Math.random() * canvas.width;
+    let y = Math.random() * canvas.height;
+
+    let bstar = new BackgroundStar(x, y, 2);
+    background_star_list.push(bstar);
+}
+console.log(background_star_list);
 
 // Create foreground stars (interactable)
-
-ctx.strokeStyle = 'white';
-ctx.fillStyle = "white";
-
-coordlist = [[40,60],[100, 400],[500, 600],[100, 600],[700, 25],[30, 600]];
+let coordlist = [[40,60],[100, 400],[500, 600],[100, 600],[700, 25],[30, 600]];
+let starlist = []
 for (let i = 0; i < coordlist.length; i++) {
-    console.log("Drawing: " + i);
-    ctx.beginPath();
-    ctx.arc(coordlist[i][0], coordlist[i][1], 3, 0, Math.PI * 2, false);
-    ctx.fill();
-    ctx.stroke();
+    let fstar = new ForegroundStar(coordlist[i][0], coordlist[i][1], 4, true, 0.5);
+    starlist.push(fstar);
 }
+
+// Animation Loop
+function animate() {
+    requestAnimationFrame(animate);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Update background
+    sky_background.update();
+    
+    // Update background stars
+    for (let i = 0; i < background_star_list.length; i++) {
+        background_star_list[i].update();
+    }
+
+    // Update foreground stars
+    for (let i = 0; i < starlist.length; i++) {
+        starlist[i].update();
+    }
+}
+
+// Begin animation
+animate();
