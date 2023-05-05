@@ -60,8 +60,13 @@ class ForegroundStar {
     Draws the circle based on the current values
     */
     draw() {
-        ctx.strokeStyle = 'white';
-        ctx.fillStyle = 'white';
+        if (!this.selected){
+            ctx.strokeStyle = 'white';
+            ctx.fillStyle = 'white';
+        } else {
+            ctx.strokeStyle = '#2ec1db';
+            ctx.fillStyle = '#2ec1db';
+        }
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
         ctx.fill();
@@ -88,6 +93,16 @@ class ForegroundStar {
         }
         this.draw();
     }
+
+    /*
+    Click event handler, if the click fell within the region of the circle
+    change its selected mode
+    */
+    click(x, y) {
+        if ((this.x - x) ** 2 + (this.y - y) ** 2 < (2*this.default_radius) ** 2) {
+            this.selected = !this.selected;
+        }
+    }
 }
 
 // Create background
@@ -108,9 +123,20 @@ console.log(background_star_list);
 let coordlist = [[40,60],[100, 400],[500, 600],[100, 600],[700, 25],[30, 600]];
 let starlist = []
 for (let i = 0; i < coordlist.length; i++) {
-    let fstar = new ForegroundStar(coordlist[i][0], coordlist[i][1], 4, true, 0.5);
+    let fstar = new ForegroundStar(coordlist[i][0], coordlist[i][1], 4, false, 0.5);
     starlist.push(fstar);
 }
+
+// Capture click event
+canvas.addEventListener('click', (event) => {
+    let rect = canvas.getBoundingClientRect();
+    let x = event.clientX - rect.x;
+    let y = event.clientY - rect.y;
+
+    for (let i = 0; i < starlist.length; i++) {
+        starlist[i].click(x,y);
+    }
+})
 
 // Animation Loop
 function animate() {
